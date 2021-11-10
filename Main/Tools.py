@@ -130,7 +130,8 @@ class Data:
                         match_person = 'Phat'
                     else:
                         max_point = max(copy_match_dct.values())
-                        potential_match = [name for name in copy_match_dct if copy_match_dct[name] > 5]
+                        median_point = statistics.median(copy_match_dct.values())
+                        potential_match = [name for name in copy_match_dct if copy_match_dct[name] >= median_point]
                         if not potential_match:  # in case of someone not matching anybody
                             match_person = random.choice([name for name in lst_person_name if name != person])
                         else:
