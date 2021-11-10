@@ -1,8 +1,10 @@
 import statistics
 import csv
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 import re
 import random
+import pandas as pd
+import numpy as np
 
 
 class Person:
@@ -10,9 +12,9 @@ class Person:
     """
 
     def __init__(self, name: str, age: int, department: str, target: Set[str], relationship: str, idea_group: int,
-                 living_city: str, hobby: Set[str]) -> None:
+                 living_city: str, hobby: Set[str], email: str) -> None:
         """initialize a person
-        :parameter name, age, department, target, relationship, idea group, living city
+        :parameter name, age, department, target, relationship, idea group, living city, email
         """
         self.name = name
         self.age = age
@@ -22,6 +24,21 @@ class Person:
         self.idea_group = idea_group
         self.living_city = living_city
         self.hobby = hobby
+        self.email = email
+
+
+def get_personal_info(lst: List[str], lst_person: List[Person]) -> List[str]:
+    """get personal information from name
+    :parameter: lst: List of names
+    :return: list of personal information
+    """
+    personal_info = []
+    for name in lst:
+        for person in lst_person:
+            if person.name == name:
+                personal_info.append(person.email)
+                break
+    return personal_info
 
 
 class Data:
@@ -31,7 +48,7 @@ class Data:
     def __init__(self, department: Set[str], target: Set[str], relationship: Set[str], idea_group: Set[int],
                  living_city: Set[str], hobby: Set[str]):
         """initialize the data
-        :parameter: department, target, relationship, idea_group, living_city
+        :parameter: department, target, relationship, idea_group, living_city, hobby
         """
         self.tag_relationship = relationship
         self.tag_idea_group = idea_group
@@ -65,7 +82,8 @@ class Data:
                     person['Relationship'],
                     idea_group,
                     person['Living city'],
-                    hobby
+                    hobby,
+                    person['email']
                 )
                 lst_person.append(temp_person)
 
@@ -95,7 +113,9 @@ class Data:
         return temp_dct
 
     def pick_something(self, lst_match: Dict):
-        """write a csv file about matching couples
+        """return random couple matching
+        :parameter lst_match: dictionary with key as name and value as dict[name : match point]
+        :return list of tuple of matching people
         """
         lst_couples = []
         lst_person_name = [name for name in lst_match]  # lst of person name
@@ -122,11 +142,45 @@ class Data:
                 lst_couples.append(temp_tuple)
         return lst_couples
 
-concac = Data({}, {}, {}, {}, {}, {})
-sth = Data.clean_data(concac, r'..\data\vsnl.csv')
-match_data = Data.match_data(concac, sth)
-bruh = Data.pick_something(concac, match_data)
-print(bruh)
+    def create_tag(self, lst_person: List[Person]) -> Tuple:
+        """create tag of all information types
+        :parameter: lst_person: List of person object
+        :return: tuple of tags
+        """
+        tag_department = set([person.department for person in lst_person])
+        tag_target = set([target for person in lst_person for target in person.target])
+        tag_relationship = set([target for person in lst_person for target in person.relationship])
+        tag_idea_group = set([person.idea_group for person in lst_person])
+        tag_living_city = set([person.living_city for person in lst_person])
+        tag_hobby = set([target for person in lst_person for target in person.hobby])
+
+        return tag_department, tag_target, tag_relationship, tag_idea_group, tag_living_city, tag_hobby
+
+    def write_csv(self, lst_couple: List[Tuple[str, str]], lst_person: List[Person]) -> None:
+        first_column = [x[0] for x in lst_couple]
+        first_column_email = get_personal_info(first_column, lst_person)
+        second_column = [x[1] for x in lst_couple]
+        second_column_email = get_personal_info(second_column, lst_person)
+        # create a dataframe for matching couples
+        frame = pd.DataFrame({
+            'First person': first_column,
+            'Second person': second_column,
+            'First person email': first_column_email,
+            'Second person email': second_column_email
+        })
+        frame.to_csv(r'C:\Users\PC\PycharmProjects\VSNL_random_pair_tinder\data\pair couples.csv')
+
+
+def check_duplicate_couple(lst_tuple_1: List[Tuple[str, str]], lst_tuple_2: List[Tuple[str, str]]) -> Tuple:
+    """check and print the couple that the same with last month
+    """
+    error_couple = []
+    for tpl in lst_tuple_1:
+        if tpl in lst_tuple_2:
+            error_couple.append(tpl)
+        if (tpl[1], tpl[0]) in lst_tuple_2:
+            error_couple.append(tpl)
+    return error_couple
 
 
 
