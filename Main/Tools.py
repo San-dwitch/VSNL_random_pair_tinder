@@ -130,8 +130,11 @@ class Data:
                         match_person = 'Phat'
                     else:
                         max_point = max(copy_match_dct.values())
-                        potential_match = [name for name in copy_match_dct if copy_match_dct[name] == max_point]
-                        match_person = random.choice(potential_match)
+                        potential_match = [name for name in copy_match_dct if copy_match_dct[name] > 5]
+                        if not potential_match:  # in case of someone not matching anybody
+                            match_person = random.choice([name for name in lst_person_name if name != person])
+                        else:
+                            match_person = random.choice(potential_match)
                         if match_person in lst_person_name:
                             done = False
                             lst_person_name.remove(match_person)
@@ -156,7 +159,13 @@ class Data:
 
         return tag_department, tag_target, tag_relationship, tag_idea_group, tag_living_city, tag_hobby
 
-    def write_csv(self, lst_couple: List[Tuple[str, str]], lst_person: List[Person]) -> None:
+    def write_csv(self, lst_couple: List[Tuple[str, str]], lst_person: List[Person], file_name: str) -> None:
+        """write csv file from the list of couple
+        :parameter: lst_couple: list of tuple of 2 names
+                    lst_person: list of person objects
+                    file_name: the file name to export to
+        :returns: a csv or excel file in directory
+        """
         first_column = [x[0] for x in lst_couple]
         first_column_email = get_personal_info(first_column, lst_person)
         second_column = [x[1] for x in lst_couple]
@@ -168,10 +177,10 @@ class Data:
             'First person email': first_column_email,
             'Second person email': second_column_email
         })
-        frame.to_csv(r'C:\Users\PC\PycharmProjects\VSNL_random_pair_tinder\data\pair couples.csv')
+        frame.to_csv(r'C:\Users\PC\PycharmProjects\VSNL_random_pair_tinder\data\{}'.format(file_name))
 
 
-def check_duplicate_couple(lst_tuple_1: List[Tuple[str, str]], lst_tuple_2: List[Tuple[str, str]]) -> Tuple:
+def check_duplicate_couple(lst_tuple_1: List[Tuple[str, str]], lst_tuple_2: List[Tuple[str, str]]) -> List[Tuple]:
     """check and print the couple that the same with last month
     """
     error_couple = []
@@ -183,6 +192,15 @@ def check_duplicate_couple(lst_tuple_1: List[Tuple[str, str]], lst_tuple_2: List
     return error_couple
 
 
+def read_last_month_file(file_name: str) -> List[Tuple]:
+    """read the file from last month and return a list of tuple
+    :parameter: path: path to the file name
+    :return: list of tuple of 2 names
+    """
+    with open(r'C:\Users\PC\PycharmProjects\VSNL_random_pair_tinder\data\{}'.format(file_name)) as f:
+        dt = csv.DictReader(f)
+        lst_couple = [(person['First person'], person['Second person']) for person in dt]
+        return lst_couple
 
 
 
